@@ -21,7 +21,7 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	cvarBDmgMult=CreateConVar("rtd_bleeder_dmg_mult", "2.0", "Bloody's damage multiplier.", _, true, 0.0, false, 9999.0);
+	cvarBDmgMult=CreateConVar("rtd_bloody_dmg_mult", "2.0", "Bloody's damage multiplier.", _, true, 0.0, false, 9999.0);
 	HookConVarChange(cvarBDmgMult, CvarChange);
 	
 	if(RTD2_IsRegOpen())
