@@ -238,7 +238,7 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 			GunNextAim[client]=GetGameTime()+f_SGAimRate;
 		}
 		CreateShoulderGun(client);
-		if(i_SGAim)
+		/*if(i_SGAim)
 		{
 			PrintToChat(client, "You have a shoulder mounted sentry that aims and fires independently.");
 		}
@@ -256,7 +256,7 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 			{
 				PrintToChat(client, "You have a shoulder mounted sentry that does... nothing, what?");
 			}
-		}
+		}*/
 	}
 	else
 	{
@@ -476,74 +476,77 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 			//3. we rotate the sentry to our target
 			if(guntarget>0 && IsValidEntity(guntarget))
 			{
-				new Float:vBuffer[3], Float:DesiredAngle[3];
-				GetEntPropVector(guntarget, Prop_Data, "m_vecAbsOrigin", targetPosition);
-				targetPosition[2]+=GetEntPropFloat(guntarget, Prop_Send, "m_flModelScale")*LastGunOffset[client];
-				SubtractVectors(targetPosition, clientPosition, vBuffer); 
-				NormalizeVector(vBuffer, vBuffer); 
-				GetVectorAngles(vBuffer, DesiredAngle); 
-				//Y = left to right?
-				//X = up and down?
-				new Float:VXAngle = GunAimAngle[client][0];
-				new Float:VYAngle = GunAimAngle[client][1];
-				new Float:DXAngle = DesiredAngle[0];
-				new Float:DYAngle = DesiredAngle[1];
-				
-				if(DXAngle>180.0)
+				if(HasEntProp(guntarget, Prop_Send, "m_flModelScale"))
 				{
-					DXAngle-=360.0;
-				}
-				else if(DYAngle<-180.0)
-				{
-					DXAngle+=360.0;
-				}
-				
-				if(DXAngle>60.0)
-				{
-					DXAngle=60.0;
-				}
-				else if(DXAngle<-60.0)
-				{
-					DXAngle=-60.0;
-				}
-				
-				if(DYAngle>180.0)
-				{
-					DYAngle-=360.0;
-				}
-				else if(DYAngle<-180.0)
-				{
-					DYAngle+=360.0;
-				}
-				
-				if(VXAngle-DXAngle<=0.0)
-				{
-					VXAngle+=f_SGTurn*1.5;
-				}
-				else
-				{
-					VXAngle-=f_SGTurn*1.5;
-				}
-				if(RotateWhichDirection(VYAngle, DYAngle)==1)
-				{
-					//we start rotating downwards
-					VYAngle+=f_SGTurn*1.5;
-					if(RotateWhichDirection(VYAngle, DYAngle)==2)
+					new Float:vBuffer[3], Float:DesiredAngle[3];
+					GetEntPropVector(guntarget, Prop_Data, "m_vecAbsOrigin", targetPosition);
+					targetPosition[2]+=GetEntPropFloat(guntarget, Prop_Send, "m_flModelScale")*LastGunOffset[client];
+					SubtractVectors(targetPosition, clientPosition, vBuffer); 
+					NormalizeVector(vBuffer, vBuffer); 
+					GetVectorAngles(vBuffer, DesiredAngle); 
+					//Y = left to right?
+					//X = up and down?
+					new Float:VXAngle = GunAimAngle[client][0];
+					new Float:VYAngle = GunAimAngle[client][1];
+					new Float:DXAngle = DesiredAngle[0];
+					new Float:DYAngle = DesiredAngle[1];
+					
+					if(DXAngle>180.0)
 					{
-						VYAngle = DYAngle;
+						DXAngle-=360.0;
 					}
-				}
-				else if(RotateWhichDirection(VYAngle, DYAngle)==2)
-				{
-					//we start rotating upwards
-					VYAngle-=f_SGTurn*1.5;
+					else if(DYAngle<-180.0)
+					{
+						DXAngle+=360.0;
+					}
+					
+					if(DXAngle>60.0)
+					{
+						DXAngle=60.0;
+					}
+					else if(DXAngle<-60.0)
+					{
+						DXAngle=-60.0;
+					}
+					
+					if(DYAngle>180.0)
+					{
+						DYAngle-=360.0;
+					}
+					else if(DYAngle<-180.0)
+					{
+						DYAngle+=360.0;
+					}
+					
+					if(VXAngle-DXAngle<=0.0)
+					{
+						VXAngle+=f_SGTurn*1.5;
+					}
+					else
+					{
+						VXAngle-=f_SGTurn*1.5;
+					}
 					if(RotateWhichDirection(VYAngle, DYAngle)==1)
 					{
-						VYAngle = DYAngle;
+						//we start rotating downwards
+						VYAngle+=f_SGTurn*1.5;
+						if(RotateWhichDirection(VYAngle, DYAngle)==2)
+						{
+							VYAngle = DYAngle;
+						}
 					}
+					else if(RotateWhichDirection(VYAngle, DYAngle)==2)
+					{
+						//we start rotating upwards
+						VYAngle-=f_SGTurn*1.5;
+						if(RotateWhichDirection(VYAngle, DYAngle)==1)
+						{
+							VYAngle = DYAngle;
+						}
+					}
+					GunAimAngle[client][0] = VXAngle;
+					GunAimAngle[client][1] = VYAngle;
 				}
-				GunAimAngle[client][0] = VXAngle;
-				GunAimAngle[client][1] = VYAngle;
 			}
 			else
 			{

@@ -269,7 +269,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 	{
 		HasPerk[client]=true;
 		DiminishRate[client]=1.0;
-		PrintToChat(client, "This is beyond aim punch.");
 	}
 	else
 	{

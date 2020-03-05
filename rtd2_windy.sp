@@ -213,7 +213,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		{
 			WindyForce[client][2]=GetRandomFloat(f_WMinForce, f_WMaxForce)*-1.0;
 		}
-		PrintToChat(client, "Watch your step!");
 	}
 	else
 	{
@@ -281,8 +280,8 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 				else
 				{
 					velocity[0]+=(WindyForce[client][0]*0.35)*multforce;
-					velocity[1]+=(WindyForce[client][0]*0.35)*multforce;
-					velocity[2]+=(WindyForce[client][0]*0.35)*multforce;
+					velocity[1]+=(WindyForce[client][1]*0.35)*multforce;
+					velocity[2]+=(WindyForce[client][2]*0.35)*multforce;
 				}
 				TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
 				NextPush[client]=GetGameTime()+0.1;

@@ -82,7 +82,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 	{
 		HasPerk[client]=true;
 		NextQuack[client]=GetGameTime()+GetRandomFloat(0.7, 1.1);
-		PrintToChat(client, "Waddle waddle.");
 	}
 	else
 	{

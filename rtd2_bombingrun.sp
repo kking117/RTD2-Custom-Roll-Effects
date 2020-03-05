@@ -139,7 +139,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 	{
 		HasPerk[client]=true;
 		NextGrenade[client]=GetGameTime()+f_BRRate;
-		PrintToChat(client, "Your body is dripping grenades don't stay still for too long.");
 	}
 	else
 	{

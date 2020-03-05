@@ -81,7 +81,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 	{
 		HasPerk[client]=true;
 		TF2_AddCondition(client, TFCond_LostFooting, 0.5, client);
-		PrintToChat(client, "Footing is hard to keep.");
 	}
 	else
 	{

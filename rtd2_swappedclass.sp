@@ -28,7 +28,7 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	cvarSCBuild=CreateConVar("rtd_swapped_build", "4", "Buildings these buildings when switching back from Engineer. (Add the numbers together for the desired effect(s)) (1 = sentryguns, 2 = dispensers, 4 = teleporters)", _, true, 0.0, true, 7.0);
+	cvarSCBuild=CreateConVar("rtd_swapped_build", "4", "Destroy these buildings when switching back from Engineer. (Add the numbers together for the desired effect(s)) (1 = sentryguns, 2 = dispensers, 4 = teleporters)", _, true, 0.0, true, 7.0);
 	HookConVarChange(cvarSCBuild, CvarChange);
 	
 	
@@ -107,7 +107,7 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		HasPerk[client]=true;
 		TF2_RemoveCondition(client, TFCond_Slowed);
 		TF2_RemoveCondition(client, TFCond_Taunting);
-		TF2_AddCondition(client, TFCond_TeleportedGlow, 2.5, client);
+		TF2_AddCondition(client, TFCond_TeleportedGlow, 2.0, client);
 		OGClass[client] = TF2_GetPlayerClass(client);
 		new randarray[8];
 		new arrayloop = 0;
@@ -122,11 +122,10 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		NewClass[client] = TFClassType:randarray[GetRandomInt(0, 7)];
 		TransHp[client] = GetEntProp(client, Prop_Send, "m_iHealth");
 		TransHpMax[client] = GetClientMaxHealth(client);
-		TF2_SetPlayerClass(client, NewClass[client]);
+		TF2_SetPlayerClass(client, NewClass[client], false, false);
 		TF2_RegeneratePlayer(client);
 		CreateTimer(0.5, Timer_ResponseTrans, GetClientUserId(client));
 		CreateTimer(0.12, Timer_UpdateHealth, GetClientUserId(client));
-		PrintToChat(client, "Walk in someone else's shoes for a bit.");
 		DestroyBuildings(client, false);
 	}
 	else
@@ -134,7 +133,7 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		HasPerk[client]=false;
 		if(IsPlayerAlive(client))
 		{
-			TF2_AddCondition(client, TFCond_TeleportedGlow, 2.5, client);
+			TF2_AddCondition(client, TFCond_TeleportedGlow, 2.0, client);
 			if(TF2_GetPlayerClass(client)==TFClass_Engineer)
 			{
 				DestroyBuildings(client, true);
@@ -147,7 +146,7 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 			TF2_RemoveCondition(client, TFCond_Taunting);
 			TransHp[client] = GetEntProp(client, Prop_Send, "m_iHealth");
 			TransHpMax[client] = GetClientMaxHealth(client);
-			TF2_SetPlayerClass(client, OGClass[client]);
+			TF2_SetPlayerClass(client, OGClass[client], false, false);
 			TF2_RegeneratePlayer(client);
 			CreateTimer(0.12, Timer_UpdateHealth, GetClientUserId(client));
 			CreateTimer(0.5, Timer_ResponseBack, GetClientUserId(client));

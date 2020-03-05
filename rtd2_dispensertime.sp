@@ -23,6 +23,8 @@ new Handle:cvarDispLevel;
 new i_DispLevel = 3;
 new Handle:cvarDispHealth;
 new Float:f_DispHealth = 1.0;
+new Handle:cvarDispMode;
+new i_DispMode = 1;
 
 public Plugin myinfo = 
 {
@@ -38,6 +40,9 @@ public void OnPluginStart()
 	
 	cvarDispHealth=CreateConVar("rtd_dispensertime_health", "1.0", "The dispenser's life multiplier (Disposable sentries always have 100 health).", _, true, 0.0, false, 99999.0);
 	HookConVarChange(cvarDispHealth, CvarChange);
+	
+	cvarDispMode=CreateConVar("rtd_dispensertime_mode", "1.0", "If set to 1, the player dies if the dispenser dies, otherwise it ends the roll early.", _, true, 0.0, false, 1.0);
+	HookConVarChange(cvarDispMode, CvarChange);
 	
 	HookEvent("teamplay_round_start", OnRoundChange);
 	HookEvent("teamplay_round_win", OnRoundChange);
@@ -60,6 +65,10 @@ public CvarChange(Handle:convar, const String:oldValue[], const String:newValue[
 	else if(convar==cvarDispHealth)
 	{
 		f_DispHealth = StringToFloat(newValue);
+	}
+	else if(convar==cvarDispMode)
+	{
+		i_DispMode = StringToInt(newValue);
 	}
 }
 
@@ -124,13 +133,26 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
 		location[2]+=1.0;
 		CreateDispenser(client, location, angles, velocity, i_DispLevel);
-		PrintToChat(client, "You are the dispenser!");
 	}
 	else
 	{
+		if(HasPerk[client])
+		{
+			if(i_DispMode==1)
+			{
+				RemoveDispenser(client, 2);
+			}
+			else
+			{
+				RemoveDispenser(client, 4);
+			}
+		}
 		HasPerk[client]=false;
 		TF2_RemovePlayerDisguise(client);
 		TF2_RemoveCondition(client, TFCond_PreventDeath);
+		TF2_RemoveCondition(client, TFCond_StealthedUserBuffFade);
+		TF2_RemoveCondition(client, TFCond_OnFire);
+		TF2_RemoveCondition(client, TFCond_Bleeding);
 		SetEntProp(client, Prop_Data, "m_CollisionGroup", 5);
 		if(f_DispHealth!=1.0)
 		{
@@ -142,7 +164,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		SetClientViewEntity(client, client);
 		SetVariantInt(0);
 		AcceptEntityInput(client, "SetForcedTauntCam");
-		RemoveDispenser(client, false);
 	}
 }
 
@@ -190,7 +211,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		{
 			if(DisguiseReturn[client]<=GetGameTime())
 			{
-				TF2_SetPlayerClass(client, OGClass[client]);
+				TF2_SetPlayerClass(client, OGClass[client], false, false);
 				DisguiseReturn[client]=0.0;
 			}
 		}
@@ -228,7 +249,14 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		}
 		else
 		{
-			RTD2_Remove(client, RTDRemove_Custom, "Dispenser was deleted");
+			if(i_DispMode==1)
+			{
+				RemoveDispenser(client, 0);
+			}
+			else
+			{
+				RemoveDispenser(client, 1);
+			}
 		}
 	}
 }
@@ -282,7 +310,14 @@ public Action:OnBuildDestroy(Handle:event, const String:name[], bool:dontBroadca
 	{
 		if(EntRefToEntIndex(DispRef[client])==entity)
 		{
-			RemoveDispenser(client, true);
+			if(i_DispMode==1)
+			{
+				RemoveDispenser(client, 0);
+			}
+			else
+			{
+				RemoveDispenser(client, 1);
+			}
 		}
 	}
 }
@@ -297,8 +332,26 @@ HealSentry(client, amount)
 	}
 }
 
-RemoveDispenser(client, bool:SlayPlayer)
+RemoveDispenser(client, reason)
 {
+	HasPerk[client]=false;
+	if(reason == 0)
+	{
+		FakeClientCommand(client, "explode");
+	}
+	else if(reason == 1)
+	{
+		SetEntProp(client, Prop_Send, "m_iHealth", GetClientMaxHealth(client));
+		RTD2_Remove(client, RTDRemove_Custom, "Dispenser was destroyed");
+	}
+	else if(reason == 3)
+	{
+		RTD2_Remove(client, RTDRemove_Custom, "Dispenser was deleted");
+	}
+	else if(reason == 4)
+	{
+		SetEntProp(client, Prop_Send, "m_iHealth", GetClientMaxHealth(client));
+	}
 	new entity = EntRefToEntIndex(DispRef[client]);
 	if(entity>0 && IsValidEntity(entity))
 	{
@@ -311,20 +364,20 @@ RemoveDispenser(client, bool:SlayPlayer)
 		location[2]+=1.0;
 		TeleportEntity(client, location, angles, velocity);
 		DispRef[client]=-1;
-		if(SlayPlayer)
+		if(reason == 2)
 		{
-			FakeClientCommand(client, "explode");
-		}
-		else
-		{
-			new disphealth = GetEntProp(entity, Prop_Send, "m_iHealth");
-			if(disphealth>GetClientMaxHealth(client))
+			new senthealth = GetEntProp(entity, Prop_Send, "m_iHealth");
+			if(senthealth>GetClientMaxHealth(client))
 			{
 				SetEntProp(client, Prop_Send, "m_iHealth", GetClientMaxHealth(client));
 			}
+			else if(senthealth>0)
+			{
+				SetEntProp(client, Prop_Send, "m_iHealth", senthealth);
+			}
 			else
 			{
-				SetEntProp(client, Prop_Send, "m_iHealth", disphealth);
+				SetEntProp(client, Prop_Send, "m_iHealth", 1);
 			}
 		}
 		AcceptEntityInput(entity, "kill");
@@ -371,7 +424,7 @@ CreateDispenser(client, Float:location[3], Float:angles[3], Float:velocity[3], l
 		OGClass[client]=TF2_GetPlayerClass(client);
 		if(OGClass[client]!=TFClass_Spy)
 		{
-			TF2_SetPlayerClass(client, TFClass_Spy);
+			TF2_SetPlayerClass(client, TFClass_Spy, false, false);
 			DisguiseReturn[client]=GetGameTime()+1.75;
 		}
 		if(GetClientTeam(client)==3)
@@ -382,6 +435,7 @@ CreateDispenser(client, Float:location[3], Float:angles[3], Float:velocity[3], l
 		{
 			TF2_DisguisePlayer(client, 3, TFClass_Scout, client);
 		}
+		TF2_AddCondition(client, TFCond_StealthedUserBuffFade);
 		
 		//TeleportEntity(entity, location, angles, velocity);
 		location[2]+=GetEntPropFloat(entity, Prop_Send, "m_flModelScale")*90.0;

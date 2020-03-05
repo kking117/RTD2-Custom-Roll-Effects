@@ -108,7 +108,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		AttatchParticle(client, "burningplayer_rainbow_flame", 0.5);
 		CreateTimer(0.5, Timer_Parachute, GetClientUserId(client));
 		FloorTouched[client] = false;
-		PrintToChat(client, "Your planet needs you!");
 	}
 	else
 	{

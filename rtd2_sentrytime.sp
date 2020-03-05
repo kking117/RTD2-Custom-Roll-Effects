@@ -23,12 +23,14 @@ new Handle:cvarSentryLevel;
 new i_SentryLevel = 3;
 new Handle:cvarSentryHealth;
 new Float:f_SentryHealth = 1.0;
+new Handle:cvarSentryMode;
+new i_SentryMode = 1;
 
 public Plugin myinfo = 
 {
-	name = "RTD2 Sentrized",
+	name = "RTD2 Sentreized",
 	author = "kking117",
-	description = "Adds the positive perk Sentrized to rtd2."
+	description = "Adds the positive perk Sentreized to rtd2."
 };
 
 public void OnPluginStart()
@@ -38,6 +40,9 @@ public void OnPluginStart()
 	
 	cvarSentryHealth=CreateConVar("rtd_sentrytime_health", "1.0", "The sentry's life multiplier (Disposable sentries always have 100 health).", _, true, 0.0, false, 99999.0);
 	HookConVarChange(cvarSentryHealth, CvarChange);
+	
+	cvarSentryMode=CreateConVar("rtd_sentrytime_mode", "1.0", "If set to 1, the player dies if the sentry dies, otherwise it ends the roll early.", _, true, 0.0, false, 1.0);
+	HookConVarChange(cvarSentryMode, CvarChange);
 	
 	HookEvent("teamplay_round_start", OnRoundChange);
 	HookEvent("teamplay_round_win", OnRoundChange);
@@ -61,12 +66,17 @@ public CvarChange(Handle:convar, const String:oldValue[], const String:newValue[
 	{
 		f_SentryHealth = StringToFloat(newValue);
 	}
+	else if(convar==cvarSentryMode)
+	{
+		i_SentryMode = StringToInt(newValue);
+	}
 }
 
 public void OnMapStart()
 {
 	i_SentryLevel = GetConVarInt(cvarSentryLevel);
 	f_SentryHealth = GetConVarFloat(cvarSentryHealth);
+	i_SentryMode = GetConVarInt(cvarSentryMode);
 	//sanity stuff
 	for(new client=1; client<=MaxClients; client++)
 	{
@@ -94,8 +104,8 @@ public void OnPluginEnd()
 
 void RegisterPerk()
 {
-    RTD2_ObtainPerk("sentrized") // create perk using unique token "mytoken"
-        .SetName("Sentrized") // set perk's name
+    RTD2_ObtainPerk("sentreized") // create perk using unique token "mytoken"
+        .SetName("Sentreized") // set perk's name
         .SetGood(true) // make the perk good
 		.SetTime(0)
         .SetSound("vo/engineer_autobuildingsentry01.mp3") // set activation sound
@@ -124,13 +134,26 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
 		location[2]+=1.0;
 		CreateSentry(client, location, angles, velocity, i_SentryLevel);
-		PrintToChat(client, "You are the sentry!");
 	}
 	else
 	{
+		if(HasPerk[client])
+		{
+			if(i_SentryMode==1)
+			{
+				RemoveSentry(client, 2);
+			}
+			else
+			{
+				RemoveSentry(client, 4);
+			}
+		}
 		HasPerk[client]=false;
 		TF2_RemovePlayerDisguise(client);
 		TF2_RemoveCondition(client, TFCond_PreventDeath);
+		TF2_RemoveCondition(client, TFCond_StealthedUserBuffFade);
+		TF2_RemoveCondition(client, TFCond_OnFire);
+		TF2_RemoveCondition(client, TFCond_Bleeding);
 		SetEntProp(client, Prop_Data, "m_CollisionGroup", 5);
 		if(f_SentryHealth!=1.0)
 		{
@@ -142,7 +165,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		SetClientViewEntity(client, client);
 		SetVariantInt(0);
 		AcceptEntityInput(client, "SetForcedTauntCam");
-		RemoveSentry(client, false);
 	}
 }
 
@@ -189,7 +211,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		{
 			if(DisguiseReturn[client]<=GetGameTime())
 			{
-				TF2_SetPlayerClass(client, OGClass[client]);
+				TF2_SetPlayerClass(client, OGClass[client], false, false);
 				DisguiseReturn[client]=0.0;
 			}
 		}
@@ -217,7 +239,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 			}
 			buttons = buttons & ~IN_ATTACK3;
 			buttons |= IN_DUCK;
-			SetEntProp(client, Prop_Send, "m_iHealth", GetClientMaxHealth(client)-(GetClientMaxHealth(client)-2));
+			SetEntProp(client, Prop_Send, "m_iHealth", 2);
 			new Float:location[3];
 			new Float:velocity[3];
 			GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", location);
@@ -241,7 +263,14 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		}
 		else
 		{
-			RTD2_Remove(client, RTDRemove_Custom, "Sentry was deleted");
+			if(i_SentryMode==1)
+			{
+				RemoveSentry(client, 0);
+			}
+			else
+			{
+				RemoveSentry(client, 1);
+			}
 		}
 	}
 }
@@ -295,7 +324,14 @@ public Action:OnBuildDestroy(Handle:event, const String:name[], bool:dontBroadca
 	{
 		if(EntRefToEntIndex(SentryRef[client])==entity)
 		{
-			RemoveSentry(client, true);
+			if(i_SentryMode==1)
+			{
+				RemoveSentry(client, 0);
+			}
+			else
+			{
+				RemoveSentry(client, 1);
+			}
 		}
 	}
 }
@@ -310,8 +346,26 @@ HealSentry(client, amount)
 	}
 }
 
-RemoveSentry(client, bool:SlayPlayer)
+RemoveSentry(client, reason)
 {
+	HasPerk[client]=false;
+	if(reason == 0)
+	{
+		FakeClientCommand(client, "explode");
+	}
+	else if(reason == 1)
+	{
+		SetEntProp(client, Prop_Send, "m_iHealth", GetClientMaxHealth(client));
+		RTD2_Remove(client, RTDRemove_Custom, "Sentry was destroyed");
+	}
+	else if(reason == 3)
+	{
+		RTD2_Remove(client, RTDRemove_Custom, "Sentry was deleted");
+	}
+	else if(reason == 4)
+	{
+		SetEntProp(client, Prop_Send, "m_iHealth", GetClientMaxHealth(client));
+	}
 	new entity = EntRefToEntIndex(SentryRef[client]);
 	if(entity>0 && IsValidEntity(entity))
 	{
@@ -324,20 +378,20 @@ RemoveSentry(client, bool:SlayPlayer)
 		location[2]+=1.0;
 		TeleportEntity(client, location, angles, velocity);
 		SentryRef[client]=-1;
-		if(SlayPlayer)
-		{
-			FakeClientCommand(client, "explode");
-		}
-		else
+		if(reason == 2)
 		{
 			new senthealth = GetEntProp(entity, Prop_Send, "m_iHealth");
 			if(senthealth>GetClientMaxHealth(client))
 			{
 				SetEntProp(client, Prop_Send, "m_iHealth", GetClientMaxHealth(client));
 			}
-			else
+			else if(senthealth>0)
 			{
 				SetEntProp(client, Prop_Send, "m_iHealth", senthealth);
+			}
+			else
+			{
+				SetEntProp(client, Prop_Send, "m_iHealth", 1);
 			}
 		}
 		AcceptEntityInput(entity, "kill");
@@ -397,7 +451,7 @@ CreateSentry(client, Float:location[3], Float:angles[3], Float:velocity[3], leve
 		OGClass[client]=TF2_GetPlayerClass(client);
 		if(OGClass[client]!=TFClass_Spy)
 		{
-			TF2_SetPlayerClass(client, TFClass_Spy);
+			TF2_SetPlayerClass(client, TFClass_Spy, false, false);
 			DisguiseReturn[client]=GetGameTime()+1.75;
 		}
 		if(GetClientTeam(client)==3)

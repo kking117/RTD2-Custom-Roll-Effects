@@ -268,7 +268,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 			MediGunID[client] = 29; //sanity stuff
 		}
 		CreateTimer(0.1, Timer_HealChecker, GetClientUserId(client));
-		PrintToChat(client, "Locked to your medigun, but you can target enemies to siphon their life!");
 	}
 	else
 	{

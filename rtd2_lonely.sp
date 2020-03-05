@@ -19,7 +19,7 @@ new Handle:cvarFFMult;
 new Float:f_FFMult = 0.5;
 
 new Handle:cvarRangeDist;
-new Float:f_RangeDist = 450.0;
+new Float:f_RangeDist = 300.0;
 
 new BeamTrail; //ring stuff
 new Handle:hTrace; //for wall checks
@@ -43,7 +43,7 @@ public void OnPluginStart()
 	cvarFFMult=CreateConVar("rtd_lonely_ff_mult", "0.5", "Lonely's damage multiplier vs team members.", _, false, 0.0, false, 1.0);
 	HookConVarChange(cvarFFMult, CvarChange);
 	
-	cvarRangeDist=CreateConVar("rtd_lonely_dist", "450.0", "Lonely's range of influence.", _, false, 0.0, false, 1.0);
+	cvarRangeDist=CreateConVar("rtd_lonely_dist", "300.0", "Lonely's range of influence.", _, false, 0.0, false, 1.0);
 	HookConVarChange(cvarRangeDist, CvarChange);
 	
 	HookEvent("teamplay_round_start", OnRoundChange);
@@ -138,7 +138,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		HasPerk[client]=true;
 		ResetHitNo(client);
 		CreateTimer(0.5, Timer_AOE, GetClientUserId(client));
-		PrintToChat(client, "It hurts to be near you.");
 	}
 	else
 	{

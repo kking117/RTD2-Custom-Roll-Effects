@@ -99,7 +99,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		CamAngles[client][0] = eyeangles[0];
 		CamAngles[client][1] = eyeangles[1];
 		CamAngles[client][2] = eyeangles[2]; //pretty sure this isn't used but eh
-		PrintToChat(client, "This looks bad.");
 	}
 	else
 	{

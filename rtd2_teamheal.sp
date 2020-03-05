@@ -70,7 +70,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
     if(bEnable)
 	{
 		HasPerk[client]=true;
-		PrintToChat(client, "Healing you deal is evenly distrubted to the entire team.");
 	}
 	else
 	{

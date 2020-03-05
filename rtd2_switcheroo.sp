@@ -80,27 +80,32 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 			new targethp = GetEntProp(target, Prop_Send, "m_iHealth");
 			GetEntPropVector(client, Prop_Data, "m_vecAbsOrigin", clientloc);
 			GetEntPropVector(client, Prop_Data, "m_vecVelocity", clientvel);
-			GetEntPropVector(client, Prop_Data, "m_angRotation", clientang);
+			GetClientEyeAngles(client, clientang);
+			clientang[2] = 0.0; //this shit hurts my neck, we're not taking any chances
+			//GetEntPropVector(client, Prop_Data, "m_angRotation", clientang);
 			GetEntPropVector(target, Prop_Data, "m_vecAbsOrigin", targetloc);
 			GetEntPropVector(target, Prop_Data, "m_vecVelocity", targetvel);
-			GetEntPropVector(target, Prop_Data, "m_angRotation", targetang);
-			TeleportEntity(client, targetloc, targetvel, targetang);
-			TeleportEntity(target, clientloc, clientvel, clientang);
+			GetClientEyeAngles(target, targetang);
+			//GetEntPropVector(target, Prop_Data, "m_angRotation", targetang);
+			targetang[2] = 0.0; //this shit hurts my neck, we're not taking any chances
+			
+			TeleportEntity(client, targetloc, targetang, targetvel);
+			TeleportEntity(target, clientloc, clientang, clientvel);
+			
 			DestroyBuildings(client);
-			TF2_SetPlayerClass(client, targetcla);
+			TF2_SetPlayerClass(client, targetcla, false, false);
 			TF2_RegeneratePlayer(client);
 			DestroyBuildings(target);
-			TF2_SetPlayerClass(target, clientcla);
+			TF2_SetPlayerClass(target, clientcla, false, false);
 			TF2_RegeneratePlayer(target);
-			TF2_AddCondition(client, TFCond_TeleportedGlow, 2.5, client);
-			TF2_AddCondition(target, TFCond_TeleportedGlow, 2.5, target);
+			TF2_AddCondition(client, TFCond_TeleportedGlow, 2.0, client);
+			TF2_AddCondition(target, TFCond_TeleportedGlow, 2.0, target);
 			SetEntProp(client, Prop_Send, "m_iHealth", targethp);
 			SetEntProp(target, Prop_Send, "m_iHealth", clienthp);
 			new String:username[60];
 			GetClientName(target, username, sizeof(username));
 			SetHudTextParams(-1.0, 0.43, 4.0, 255, 255, 255, 255, 0, 0.2, 0.0, 0.1);
 			ShowSyncHudText(client, SwitchHUD, "Swapped places with %s!", username);
-			PrintToChat(client, "You've swapped places and class with %s.", username);
 			GetClientName(client, username, sizeof(username));
 			SetHudTextParams(-1.0, 0.43, 4.0, 255, 255, 255, 255, 0, 0.2, 0.0, 0.1);
 			ShowSyncHudText(target, SwitchHUD, "Swapped places with %s!", username);
@@ -120,9 +125,8 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 			}
 			TransHp[client] = GetEntProp(client, Prop_Send, "m_iHealth");
 			TransHpMax[client] = GetClientMaxHealth(client);
-			TF2_SetPlayerClass(client, TFClassType:randarray[GetRandomInt(0, 7)]);
+			TF2_SetPlayerClass(client, TFClassType:randarray[GetRandomInt(0, 7)], false, false);
 			TF2_RegeneratePlayer(client);
-			PrintToChat(client, "You've swapped classes.");
 			CreateTimer(0.12, Timer_UpdateHealth, GetClientUserId(client));
 		}
 	}

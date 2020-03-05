@@ -180,7 +180,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		NextBurnReact[client]=GetGameTime()+GetRandomFloat(3.0, 6.0);
 		CreateTimer(0.1, Timer_ReapplyParticle, GetClientUserId(client));
 		CreateTimer(f_HFTick, Timer_ApplyBurnDmg, GetClientUserId(client));
-		PrintToChat(client, "Scorched by demonic flames.");
 	}
 	else
 	{

@@ -82,7 +82,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
     if(bEnable)
 	{
 		HasPerk[client]=true;
-		PrintToChat(client, "You take %.0f%% more damage, but it's all converted to bleeding.", (f_BDmgMult-1.0)*100.0);
 	}
 	else
 	{
@@ -97,7 +96,7 @@ public Action:OnTakeDamagePost(client, &attacker, &inflictor, &Float:damage, &da
 		if(!(damagetype & DMG_SLASH))
 		{
 			damage*=f_BDmgMult;
-			if(damage>9.0)
+			if(damage>8.0)
 			{
 				
 				if((damagetype & DMG_PREVENT_PHYSICS_FORCE) && (damagetype & DMG_BURN))
@@ -107,11 +106,11 @@ public Action:OnTakeDamagePost(client, &attacker, &inflictor, &Float:damage, &da
 				{
 					if(IsValidClient(attacker))
 					{
-						TF2_MakeBleed(client, attacker, (damage-5.0)/9.0);
+						TF2_MakeBleed(client, attacker, (damage-5.0)/8.0);
 					}
 					else
 					{
-						TF2_MakeBleed(client, client, (damage-5.0)/9.0);
+						TF2_MakeBleed(client, client, (damage-5.0)/8.0);
 					}
 					damage=4.0;
 					return Plugin_Changed;

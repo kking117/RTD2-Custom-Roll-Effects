@@ -83,7 +83,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
     if(bEnable)
 	{
 		HasBouncyPerk[client]=true;
-		PrintToChat(client, "You rebound off of surfaces when fast enough.");
 	}
 	else
 	{

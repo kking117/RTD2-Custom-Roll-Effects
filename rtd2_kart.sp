@@ -67,7 +67,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 	{
 		HasPerk[client]=true;
 		EnableKart(client);
-		PrintToChat(client, "Brum brum.");
 	}
 	else
 	{

@@ -84,10 +84,9 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		TF2Attrib_SetByName(client, "damage force increase hidden", 1.4);
 		TF2Attrib_SetByName(client, "increased jump height from weapon", 1.3);
 		TF2Attrib_SetByName(client, "SET BONUS: move speed set bonus", 1.4);
-		SetEntityRenderColor(client, 0, 128, 255, 192);
+		SetEntityRenderColor(client, 128, 255, 192, 255);
 		ForceWeaponSlot(client, 2);
 		TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.01);
-		PrintToChat(client, "You bleed money.");
 	}
 	else
 	{

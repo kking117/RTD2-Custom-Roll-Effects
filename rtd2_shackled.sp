@@ -107,7 +107,6 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 		ShackleTo[client]=-1;
 		NextPull[client]=GetGameTime();
 		FindNewPartner(client);
-		PrintToChat(client, "Co-op mode activated.");
 	}
 	else
 	{
@@ -206,38 +205,38 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 							{
 								case TFClass_Scout, TFClass_Spy:
 								{
-									PullPower -= 0.05;
+									PullPower *= 0.8;
 								}
 								//case TFClass_Engineer, TFClass_Pyro, TFClass_Medic, TFClass_Sniper:
 								//{
-								//	PullPower += 0.0;
+								//	PullPower *= 1.0;
 								//}
 								case TFClass_DemoMan, TFClass_Soldier:
 								{
-									PullPower += 0.05;
+									PullPower *= 1.2;
 								}
 								case TFClass_Heavy:
 								{
-									PullPower += 0.1;
+									PullPower *= 1.4;
 								}
 							}
 							switch(TF2_GetPlayerClass(buddy))
 							{
 								case TFClass_Scout, TFClass_Spy:
 								{
-									PullPower += 0.05;
+									PullPower *= 1.4;
 								}
 								//case TFClass_Engineer, TFClass_Pyro, TFClass_Medic, TFClass_Sniper:
 								//{
-								//	PullPower = 0.0;
+								//	PullPower *= 1.0;
 								//}
 								case TFClass_DemoMan, TFClass_Soldier:
 								{
-									PullPower -= 0.05;
+									PullPower *= 0.8;
 								}
 								case TFClass_Heavy:
 								{
-									PullPower -= 0.1;
+									PullPower *= 0.6;
 								}
 							}
 						}
@@ -258,8 +257,8 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 						}
 						if(InClearView(clientpos, buddypos, client))
 						{
-							ShackleLife[client]-=RoundToNearest(dist*0.01);
-							ShackleLife[buddy]-=RoundToNearest(dist*0.01);
+							ShackleLife[client]-=RoundToNearest(dist*0.008);
+							ShackleLife[buddy]-=RoundToNearest(dist*0.008);
 						}
 						else
 						{
