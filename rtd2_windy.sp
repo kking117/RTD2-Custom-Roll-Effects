@@ -10,11 +10,12 @@
 new bool:HasPerk[MAXPLAYERS+1];
 new Float:NextPush[MAXPLAYERS+1];
 new Float:WindyForce[MAXPLAYERS+1][3];
+new Float:RaiseMult[MAXPLAYERS+1];
 
 new Handle:cvarWMinForce;
-new Float:f_WMinForce = 50.0;
+new Float:f_WMinForce = 75.0;
 new Handle:cvarWMaxForce;
-new Float:f_WMaxForce = 250.0;
+new Float:f_WMaxForce = 175.0;
 
 new Handle:cvarWScoutMult;
 new Float:f_WScoutMult = 1.25;
@@ -45,10 +46,10 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	cvarWMinForce=CreateConVar("rtd_windy_minforce", "50.0", "The minimum push force windy can appply.", _, true, 0.0, true, 99999.0);
+	cvarWMinForce=CreateConVar("rtd_windy_minforce", "75.0", "The minimum push force windy can appply.", _, true, 0.0, true, 99999.0);
 	HookConVarChange(cvarWMinForce, CvarChange);
 	
-	cvarWMaxForce=CreateConVar("rtd_windy_maxforce", "275.0", "The maximum push force windy can appply.", _, true, 0.0, true, 99999.0);
+	cvarWMaxForce=CreateConVar("rtd_windy_maxforce", "175.0", "The maximum push force windy can appply.", _, true, 0.0, true, 99999.0);
 	HookConVarChange(cvarWMaxForce, CvarChange);
 	
 	cvarWScoutMult=CreateConVar("rtd_windy_scout_mult", "1.25", "Windy force multiplier for Scouts.", _, true, 0.0, true, 99999.0);
@@ -189,30 +190,18 @@ public void MyPerk_Call(int client, RTDPerk perk, bool bEnable)
 	{
 		HasPerk[client]=true;
 		NextPush[client]=GetGameTime()+0.1;
-		if(GetRandomInt(0, 1)==0)
+		WindyForce[client][0] = GetRandomFloat(-100.0, 30.0);
+		if(WindyForce[client][0]<-50.0)
 		{
-			WindyForce[client][0]=GetRandomFloat(f_WMinForce, f_WMaxForce);
+			WindyForce[client][0]=-50.0;
 		}
-		else
-		{
-			WindyForce[client][0]=GetRandomFloat(f_WMinForce, f_WMaxForce)*-1.0;
-		}
-		if(GetRandomInt(0, 1)==0)
-		{
-			WindyForce[client][1]=GetRandomFloat(f_WMinForce, f_WMaxForce);
-		}
-		else
-		{
-			WindyForce[client][1]=GetRandomFloat(f_WMinForce, f_WMaxForce)*-1.0;
-		}
-		if(GetRandomInt(0, 1)==0)
-		{
-			WindyForce[client][2]=GetRandomFloat(f_WMinForce, f_WMaxForce);
-		}
-		else
-		{
-			WindyForce[client][2]=GetRandomFloat(f_WMinForce, f_WMaxForce)*-1.0;
-		}
+		WindyForce[client][1] = GetRandomFloat(-180.0, 180.0);
+		WindyForce[client][2] = 0.0;
+		GetAngleVectors(WindyForce[client], WindyForce[client], NULL_VECTOR, NULL_VECTOR);
+		WindyForce[client][0]*=GetRandomFloat(f_WMinForce, f_WMaxForce);
+		WindyForce[client][1]*=GetRandomFloat(f_WMinForce, f_WMaxForce);
+		WindyForce[client][2]*=GetRandomFloat(f_WMinForce, f_WMaxForce);
+		RaiseMult[client] = 1.0;
 	}
 	else
 	{
@@ -273,18 +262,33 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 				}
 				if(GetEntityFlags(client) & FL_ONGROUND)
 				{
+					multforce*=0.6;
 					velocity[0]+=WindyForce[client][0]*multforce;
 					velocity[1]+=WindyForce[client][1]*multforce;
-					velocity[2]+=WindyForce[client][2]*multforce;
+					velocity[2]+=(WindyForce[client][2]*multforce)*RaiseMult[client];
+					RaiseMult[client]=1.0;
+					NextPush[client]=GetGameTime()+0.03;
 				}
 				else
 				{
-					velocity[0]+=(WindyForce[client][0]*0.35)*multforce;
-					velocity[1]+=(WindyForce[client][1]*0.35)*multforce;
-					velocity[2]+=(WindyForce[client][2]*0.35)*multforce;
+					multforce*=0.35;
+					velocity[0]+=WindyForce[client][0]*multforce;
+					velocity[1]+=WindyForce[client][1]*multforce;
+					velocity[2]+=(WindyForce[client][2]*multforce)*RaiseMult[client];
+					if(WindyForce[client][2]>0.0)
+					{
+						if(RaiseMult[client]<0.5)
+						{
+							RaiseMult[client]=0.5;
+						}
+						else
+						{
+							RaiseMult[client]-=0.002;
+						}
+					}
+					NextPush[client]=GetGameTime()+0.1;
 				}
 				TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
-				NextPush[client]=GetGameTime()+0.1;
 			}
 		}
 	}

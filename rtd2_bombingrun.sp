@@ -17,6 +17,8 @@ new Handle:cvarBRCritRate;
 new Float:f_BRCritRate = 10.0;
 new Handle:cvarBRDmg;
 new Float:f_BRDmg = 100.0;
+new Handle:cvarBRSelfMult;
+new Float:f_BRSelfMult = 0.75;
 new Handle:cvarBRRate;
 new Float:f_BRRate = 0.1;
 new Handle:cvarBRRadius;
@@ -42,6 +44,9 @@ public void OnPluginStart()
 	
 	cvarBRDmg=CreateConVar("rtd_bombing_dmg", "100.0", "The base damage the of the bombs.", _, true, 1.0, false, 1000.0);
 	HookConVarChange(cvarBRDmg, CvarChange);
+	
+	cvarBRSelfMult=CreateConVar("rtd_bombing_selfmult", "0.75", "Bomb self-harm damage multiplier.", _, true, 0.0, false, 1000.0);
+	HookConVarChange(cvarBRSelfMult, CvarChange);
 	
 	cvarBRRate=CreateConVar("rtd_bombing_rate", "0.1", "The rate of which bombing run spawns bombs. (Please be sensible.)", _, true, 0.05, false, 1000.0);
 	HookConVarChange(cvarBRRate, CvarChange);
@@ -82,9 +87,17 @@ public CvarChange(Handle:convar, const String:oldValue[], const String:newValue[
 	{
 	    f_BRDmg=StringToFloat(newValue);
 	}
+	else if(convar==cvarBRSelfMult)
+	{
+	    f_BRSelfMult=StringToFloat(newValue);
+	}
 	else if(convar==cvarBRRate)
 	{
 	    f_BRRate=StringToFloat(newValue);
+	}
+	else if(convar==cvarBRCritRate)
+	{
+		f_BRCritRate==StringToFloat(newValue);
 	}
 }
 
@@ -95,6 +108,8 @@ public void OnMapStart()
 	f_BRDmg = GetConVarFloat(cvarBRDmg);
 	f_BRRate = GetConVarFloat(cvarBRRate);
 	f_BRRadius = GetConVarFloat(cvarBRRadius);
+	f_BRSelfMult = GetConVarFloat(cvarBRSelfMult);
+	f_BRCritRate = GetConVarFloat(cvarBRCritRate);
 	PrecacheSound(SND_SHOOT);
 	PrecacheSound(SND_BLAST1);
 	//PrecacheSound("vo/taunts/demoman_taunts11.mp3");
@@ -171,31 +186,13 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 				GetEntPropVector(client, Prop_Data, "m_vecAbsOrigin", location);
 				location[2]+=GetEntPropFloat(client, Prop_Send, "m_flModelScale")*35.0;
 				new bool:crits = false;
-				if(GetRandomInt(0, 1)==0)
-				{
-					velocity[0]=GetRandomFloat(f_BRMinForce, f_BRMaxForce);
-				}
-				else
-				{
-					velocity[0]=GetRandomFloat(f_BRMinForce, f_BRMaxForce)*-1.0;
-				}
-				if(GetRandomInt(0, 1)==0)
-				{
-					velocity[1]=GetRandomFloat(f_BRMinForce, f_BRMaxForce);
-				}
-				else
-				{
-					velocity[1]=GetRandomFloat(f_BRMinForce, f_BRMaxForce)*-1.0;
-				}
-				if(GetRandomInt(0, 1)==0)
-				{
-					velocity[2]=GetRandomFloat(f_BRMinForce, f_BRMaxForce);
-				}
-				else
-				{
-					velocity[2]=GetRandomFloat(f_BRMinForce, f_BRMaxForce)*-1.0;
-				}
-				if(f_BRCritRate>=GetRandomFloat(0.0, 100.0))
+				velocity[0] = GetRandomFloat(-180.0, 180.0);
+				velocity[1] = GetRandomFloat(-180.0, 180.0);
+				GetAngleVectors(velocity, velocity, NULL_VECTOR, NULL_VECTOR);
+				velocity[0]*=GetRandomFloat(f_BRMinForce, f_BRMaxForce);
+				velocity[1]*=GetRandomFloat(f_BRMinForce, f_BRMaxForce);
+				velocity[2]*=GetRandomFloat(f_BRMinForce, f_BRMaxForce);
+				if(f_BRCritRate>=100.0 || f_BRCritRate>=GetRandomFloat(0.0, 100.0))
 				{
 					crits = true;
 				}
@@ -356,7 +353,7 @@ public Action:ExplodeGrenade(owner, grenade, toucher, dmgbits, bool:effect, Stri
 				{
 					if(i==owner)
 					{
-						curdmg*0.75;
+						curdmg*=f_BRSelfMult;
 					}
 					if(i==toucher)
 					{
